@@ -4,6 +4,7 @@ using UnityEngine;
 public class Food : MonoBehaviour
 {
     [SerializeField] private float eatDuration;
+    [SerializeField] private string actionName;
 
     public void Eat()
     {
@@ -11,6 +12,7 @@ public class Food : MonoBehaviour
     }
     private IEnumerator EatFoodRoutine()
     {
+        GameEvents.OnRequestProgressBar?.Invoke(eatDuration, actionName);
         GameEvents.RaiseFoodEatStart();
         yield return new WaitForSeconds(eatDuration);
 

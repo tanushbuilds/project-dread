@@ -19,6 +19,7 @@ public class GameEvents : MonoBehaviour
     public static event Action OnSit;
     public static event Action OnUnSit;
     public static Action OnSleep;
+    public static Action<float, string> OnRequestProgressBar;
 
 
     public static void RaiseLookAtInteractable(){
