@@ -7,6 +7,8 @@ public class Headbob : MonoBehaviour
     [SerializeField] private float walkAmplitudeY = 0.015f;
     [SerializeField] private float walkAmplitudeX = 0.015f;
 
+
+    [SerializeField] private float fastWalkFrequency = 15f;
     [SerializeField] private float walkFrequency = 10f;
 
     [Space(10)]
@@ -14,7 +16,8 @@ public class Headbob : MonoBehaviour
 
     private CharacterController controller;
     private Vector3 startPos;
-    public static Headbob instance;
+    public static Headbob Instance;
+    private bool isFastWalk;
 
     private void OnEnable()
     {
@@ -41,7 +44,7 @@ public class Headbob : MonoBehaviour
 
     private void Awake()
     {
-        instance = this;
+        Instance = this;
         controller = GetComponent<CharacterController>();
         startPos = cameraHolder.localPosition;
     }
@@ -69,6 +72,11 @@ public class Headbob : MonoBehaviour
         }
     }
 
+    public void SetIsFastWalk(bool isFastWalk)
+    {
+        this.isFastWalk = isFastWalk;
+    }
+
     private bool IsMoving()
     {
         if (controller == null) return false;
@@ -85,7 +93,7 @@ public class Headbob : MonoBehaviour
         float ampY = walkAmplitudeY;
         float ampX = walkAmplitudeX;
 
-        float freq = walkFrequency;
+        float freq = isFastWalk ? fastWalkFrequency : walkFrequency;
 
         motion.y = Mathf.Sin(Time.time * freq) * ampY;
         motion.x = Mathf.Cos(Time.time * freq * 0.5f) * ampX * 0.5f;

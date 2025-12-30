@@ -6,6 +6,7 @@ public class InputHandler : MonoBehaviour
 {
     private GameInput gameInput;
     private Player player;
+    private Headbob headBob;
     private PlayerLookController playerLookController;
 
     public static Action OnInteractKeyPressed;
@@ -23,6 +24,7 @@ public class InputHandler : MonoBehaviour
 
         player = Player.Instance;
         playerLookController = PlayerLookController.Instance;
+        headBob = Headbob.Instance;
     }
 
     private void OnEnable()
@@ -48,6 +50,7 @@ public class InputHandler : MonoBehaviour
         Vector2 moveInput2D = gameInput.Player.Movement.ReadValue<Vector2>();
         Vector3 moveInput = new Vector3(moveInput2D.x, 0f, moveInput2D.y).normalized;
         player.HandleMovement(moveInput, sprintAction.IsPressed());
+        headBob.SetIsFastWalk(sprintAction.IsPressed());
     }
 
     private void GetLookVector()

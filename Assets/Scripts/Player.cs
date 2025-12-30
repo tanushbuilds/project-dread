@@ -20,7 +20,8 @@ public class Player : MonoBehaviour
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float mouseSensitivity;
     [SerializeField] private AudioSource footstep;
-    [SerializeField] private float stepInterval;
+    [SerializeField] private float walkStepInterval;
+    [SerializeField] private float fastWalkStepInterval;
     [SerializeField] private Vector2 footstepSoundPitchRange;
 
     private float stepTimer;
@@ -95,7 +96,7 @@ public class Player : MonoBehaviour
             {
                 footstep.pitch = Random.Range(footstepSoundPitchRange.x, footstepSoundPitchRange.y);
                 footstep.Play(); 
-                stepTimer = stepInterval;
+                stepTimer = isFastWalk ? fastWalkStepInterval : walkStepInterval;
             }
         }
         else
