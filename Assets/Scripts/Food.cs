@@ -11,6 +11,7 @@ public class Food : MonoBehaviour
     }
     private IEnumerator EatFoodRoutine()
     {
+        GameEvents.RaiseFoodEatStart();
         yield return new WaitForSeconds(eatDuration);
 
         GameEvents.RaiseFoodEaten();

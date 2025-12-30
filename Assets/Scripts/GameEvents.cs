@@ -5,6 +5,7 @@ public class GameEvents : MonoBehaviour
 {
     public static event Action OnLookAtInteractable;
     public static event Action OnLookAway;
+    public static event Action OnFoodEatStart;
     public static event Action OnFoodEaten;
     public static event Action OnPeeStart;
     public static event Action OnPeeEnd;
@@ -35,6 +36,10 @@ public class GameEvents : MonoBehaviour
     public static void RaiseLookAway()
     {
         OnLookAway?.Invoke();
+    }
+    public static void RaiseFoodEatStart()
+    {
+        OnFoodEatStart?.Invoke();
     }
 
     public static void RaiseFoodEaten()
