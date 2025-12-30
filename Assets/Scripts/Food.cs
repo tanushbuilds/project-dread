@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Food : MonoBehaviour
@@ -6,7 +7,9 @@ public class Food : MonoBehaviour
     [SerializeField] private float eatDuration;
     [SerializeField] private string actionName;
     [SerializeField] private AudioSource eatSound;
-    [SerializeField] private GameObject fries;
+
+    [SerializeField] private List<GameObject> friesSets;
+
 
     public void Eat()
     {
@@ -17,11 +20,17 @@ public class Food : MonoBehaviour
         GameEvents.OnRequestProgressBar?.Invoke(eatDuration, actionName);
         GameEvents.RaiseFoodEatStart();
 
-        eatSound.Play();
+        if (eatSound != null)
+            eatSound.Play();
 
-        yield return new WaitForSeconds(eatDuration);
+        float stepTime = eatDuration / friesSets.Count;
 
-        fries.SetActive(false);
+        for (int i = friesSets.Count - 1; i >= 0; i--)
+        {
+            yield return new WaitForSeconds(stepTime);
+            friesSets[i].SetActive(false);
+        }
+
         GameEvents.RaiseFoodEaten();
     }
 }
