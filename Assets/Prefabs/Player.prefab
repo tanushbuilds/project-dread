@@ -436,7 +436,10 @@ MonoBehaviour:
     m_Bits: 128
   groundCheck: {fileID: 682712555982907905}
   mouseSensitivity: 10
-  footeStep: {fileID: 0}
+  footstep: {fileID: 1987215505826852054}
+  walkStepInterval: 0.8
+  fastWalkStepInterval: 0.6
+  footstepSoundPitchRange: {x: 0.65, y: 0.85}
   playerHeightWhileSitting: 0.6
 --- !u!114 &4115789338940350110
 MonoBehaviour:
@@ -451,8 +454,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractionManager
   interactDistance: 1.5
-  grabHandler: {fileID: 0}
-  playerCamera: {fileID: 0}
+  grabHandler: {fileID: 889883044904906791}
+  playerCamera: {fileID: 4032228674500947071}
 --- !u!114 &1521352393744007399
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -468,6 +471,7 @@ MonoBehaviour:
   _enabled: 1
   walkAmplitudeY: 0.073
   walkAmplitudeX: 0.2
+  fastWalkFrequency: 15
   walkFrequency: 6.5
   cameraHolder: {fileID: 3576892835992660751}
 --- !u!81 &5178967423317938405
@@ -494,7 +498,7 @@ MonoBehaviour:
   interactableGrabSlot: {fileID: 655472893314697567}
   throwForce: 2
   grabSlotSitHeightMultiplier: -0.25
-  interactableGrabSlotSitHeightMultiplier: 0.25
+  interactableGrabSlotSitHeightMultiplier: -0.05
 --- !u!82 &1987215505826852054
 AudioSource:
   m_ObjectHideFlags: 0
@@ -506,9 +510,9 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 0}
-  m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Resource: {fileID: 8300000, guid: dfd6e5e8f325e07489035c9ef6ecab13, type: 3}
+  m_PlayOnAwake: 0
+  m_Volume: 0.5
   m_Pitch: 1
   Loop: 0
   Mute: 0
