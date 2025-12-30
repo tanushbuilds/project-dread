@@ -200,18 +200,14 @@ public class Player : MonoBehaviour
     private IEnumerator PeeRoutine()
     {
         DisableMovement();
-
         yield return StartCoroutine(ScreenFader.Instance.FadeIn());
 
-
         GameEvents.RaisePeeStart();
+        GameEvents.OnRequestProgressBar?.Invoke(peeDuration, "Peeing");
 
         yield return StartCoroutine(ScreenFader.Instance.FadeRemain(peeDuration));
 
-        Debug.Log("Finished peeing");
-
         yield return StartCoroutine(ScreenFader.Instance.FadeOut());
-
 
         GameEvents.RaisePeeEnd();
         EnableMovement();

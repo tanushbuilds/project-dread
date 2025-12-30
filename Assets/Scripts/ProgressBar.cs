@@ -23,10 +23,9 @@ public class ProgressBar : MonoBehaviour
 
     private void Start()
     {
-        if (progressSlider != null)
+        if (progressSlider != null && progressAction != null)
         {
-            progressSlider.value = 0f;
-            HideProgressSlider();
+            Reset();
         }
     }
 
