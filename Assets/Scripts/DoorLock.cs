@@ -4,14 +4,17 @@ using UnityEngine;
 public class DoorLock : MonoBehaviour, ISecondaryInteractable
 {
     private bool canLock = false;
-    private bool isLocked = true;
 
     public event Action OnDoorLock;
     [SerializeField] private Door door;
-    [SerializeField] private AudioSource lockSound;
     [SerializeField] private Animator doorAnim;
     [SerializeField] private Transform keyPrefabTransform;
 
+    [SerializeField] private AudioSource doorAudioSource;
+    [SerializeField] private AudioClip lockClip;
+    [SerializeField] private AudioClip unlockClip;
+    [SerializeField] private AudioClip keyRemovalClip;
+    [SerializeField] private bool isLocked;
 
     private void Start()
     {
@@ -35,7 +38,7 @@ public class DoorLock : MonoBehaviour, ISecondaryInteractable
 
             OnDoorLock?.Invoke();
 
-            if (lockSound != null) lockSound.Play();
+            if (lockClip != null) doorAudioSource.PlayOneShot(lockClip);
 
         }
         else if(isLocked)
@@ -62,5 +65,13 @@ public class DoorLock : MonoBehaviour, ISecondaryInteractable
         
         GameEvents.OnRequestEnableMovement?.Invoke();
         GameEvents.OnRequestEnableHeadBob?.Invoke();
+    }
+    public void OnUnlockDoor()
+    {
+        doorAudioSource.PlayOneShot(unlockClip);
+    }
+    public void OnKeyRemoval()
+    {
+        doorAudioSource.PlayOneShot(keyRemovalClip);
     }
 }
