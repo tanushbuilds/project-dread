@@ -26,7 +26,12 @@ public class Toilet : MonoBehaviour, IInteractable
     public void Interact()
     {
         if (hasPeed) return;
+
+        GameEvents.OnRequestDisableHeadBob?.Invoke();
+        GameEvents.OnRequestDisableLook?.Invoke();
+
         GameEvents.OnRequestPee?.Invoke();
+        
         hasPeed = true;
     }
     private void PlaySound()

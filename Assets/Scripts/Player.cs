@@ -4,172 +4,168 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     public static Player Instance;
-    private CharacterController playerController;
-    private Vector3 velocity;
 
-    private bool canLook = true;
-    private float playerHeight;
-    private Vector3 lastPosition;
-
-    [SerializeField] private float peeDuration;
+    [Header("Movement")]
     [SerializeField] private float walkSpeed;
     [SerializeField] private float fastWalkSpeed;
     [SerializeField] private float gravity;
+
+    [Header("Ground Check")]
+    [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckDistance;
     [SerializeField] private LayerMask groundMask;
-    [SerializeField] private Transform groundCheck;
+
+    [Header("Look")]
     [SerializeField] private float mouseSensitivity;
-    [SerializeField] private AudioSource footstep;
-    [SerializeField] private float walkStepInterval;
-    [SerializeField] private float fastWalkStepInterval;
-    [SerializeField] private Vector2 footstepSoundPitchRange;
+    [SerializeField] private RotationSettings rotationSettings;
 
-    private float stepTimer;
-
-
+    [Header("Sit / Pee")]
+    [SerializeField] private float peeDuration;
     [SerializeField] private float playerHeightWhileSitting;
 
-    private bool isGrounded;
-    private float speed;
+    private CharacterController controller;
+    private Vector3 velocity;
+
     private bool canMove = true;
+    private bool canBodyLook = true;
+
+    private Transform lookTarget;
+    private float originalHeight;
+    private Vector3 lastPosition;
     private Transform currentSitPosition;
+
+    private void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+
+        controller = GetComponent<CharacterController>();
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
 
     private void OnEnable()
     {
+        GameEvents.OnRequestDisableMovement += DisableMovement;
+        GameEvents.OnRequestEnableMovement += EnableMovement;
+
+        GameEvents.OnRequestDisableBodyLook += DisableBodyLook;
+        GameEvents.OnRequestEnableBodyLook += EnableBodyLook;
+
+        GameEvents.OnRequestBodyLookAt += SetLookTarget;
+        GameEvents.OnRequestStopBodyLookAt += ClearLookTarget;
+
         GameEvents.OnRequestSit += SitWithFade;
         GameEvents.OnRequestUnSit += UnSitWithFade;
         GameEvents.OnRequestPee += Pee;
-        GameEvents.OnTalk += _OnTalk;
-        GameEvents.OnEndDialogue += EnableMovement;
-        GameEvents.OnEndDialogue += EnableLook;
-        GameEvents.OnSleep += DisableMovement;
-        GameEvents.OnSleep += DisableLook;
-
-
     }
 
     private void OnDisable()
     {
+        GameEvents.OnRequestDisableMovement -= DisableMovement;
+        GameEvents.OnRequestEnableMovement -= EnableMovement;
+
+        GameEvents.OnRequestDisableBodyLook -= DisableBodyLook;
+        GameEvents.OnRequestEnableBodyLook -= EnableBodyLook;
+
+        GameEvents.OnRequestBodyLookAt -= SetLookTarget;
+        GameEvents.OnRequestStopBodyLookAt -= ClearLookTarget;
+
         GameEvents.OnRequestSit -= SitWithFade;
         GameEvents.OnRequestUnSit -= UnSitWithFade;
         GameEvents.OnRequestPee -= Pee;
-        GameEvents.OnTalk -= _OnTalk;
-        GameEvents.OnEndDialogue -= EnableMovement;
-        GameEvents.OnEndDialogue -= EnableLook;
-        GameEvents.OnSleep -= DisableMovement;
-        GameEvents.OnSleep -= DisableLook;
-    }
-
-    private void Awake()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        playerController = GetComponent<CharacterController>();
     }
 
     private void Update()
     {
         ApplyGravity();
+
+        if (lookTarget != null)
+            RotateTowardsTarget();
     }
 
-    public void HandleMovement(Vector3 moveDir, bool isFastWalk)
+    public void HandleMovement(Vector3 input, bool fastWalk)
     {
         if (!canMove) return;
-        speed = isFastWalk ? fastWalkSpeed : walkSpeed;
 
-        Vector3 move = transform.forward * moveDir.z + transform.right * moveDir.x;
+        float speed = fastWalk ? fastWalkSpeed : walkSpeed;
+        Vector3 move = transform.forward * input.z + transform.right * input.x;
+
         move *= speed;
-
         move.y = velocity.y;
 
-        playerController.Move(move * Time.deltaTime);
-
-        if (canMove && moveDir.magnitude > 0.1f)
-        {
-            stepTimer -= Time.deltaTime;
-            if (stepTimer <= 0f)
-            {
-                footstep.pitch = Random.Range(footstepSoundPitchRange.x, footstepSoundPitchRange.y);
-                footstep.Play(); 
-                stepTimer = isFastWalk ? fastWalkStepInterval : walkStepInterval;
-            }
-        }
-        else
-        {
-            stepTimer = 0f;
-        }
-
+        controller.Move(move * Time.deltaTime);
     }
-    public void HandleLook(Vector2 lookDir)
+
+    public void HandleLook(Vector2 lookInput)
     {
-        if (!canLook) return;
-        transform.Rotate(Vector3.up * lookDir.x * mouseSensitivity * Time.deltaTime);
+        if (!canBodyLook || lookTarget != null) return;
+
+        transform.Rotate(Vector3.up * lookInput.x * mouseSensitivity * Time.deltaTime);
     }
+
+    private void SetLookTarget(Transform target)
+    {
+        lookTarget = target;
+    }
+
+    private void ClearLookTarget()
+    {
+        lookTarget = null;
+    }
+
+    private void RotateTowardsTarget()
+    {
+        Vector3 direction = lookTarget.position - transform.position;
+
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude < 0.001f)
+            return;
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            rotationSettings.rotateSmoothSpeed * Time.deltaTime
+        );
+    }
+
 
     private void ApplyGravity()
     {
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask);
+        bool grounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask);
 
-        if (isGrounded && velocity.y < 0)
+        if (grounded && velocity.y < 0)
             velocity.y = -2f;
 
         velocity.y += gravity * Time.deltaTime;
     }
 
-
-    private void Sit()
+    private void SitWithFade(Transform sitPoint)
     {
-        playerHeight = playerController.height;
-        lastPosition = transform.position;
-
-        DisableMovement();
-        playerController.enabled = false;
-
-        transform.position = currentSitPosition.position;
-        transform.rotation = Quaternion.Euler(0f, -90f, 0f);
-
-        playerController.height = playerHeightWhileSitting;
-        playerController.center = Vector3.up * (playerController.height / 2f);
-        playerController.enabled = true;
-
-    }
-
-    private void SitWithFade(Transform sitPosition)
-    {
-        currentSitPosition = sitPosition;
+        currentSitPosition = sitPoint;
         StartCoroutine(SitRoutine());
     }
 
     private IEnumerator SitRoutine()
     {
-        yield return StartCoroutine(ScreenFader.Instance.FadeIn());
+        DisableMovement();
+        yield return ScreenFader.Instance.FadeIn();
 
-        Sit();
+        originalHeight = controller.height;
+        lastPosition = transform.position;
+
+        controller.enabled = false;
+        transform.position = currentSitPosition.position;
+        controller.height = playerHeightWhileSitting;
+        controller.enabled = true;
+
         GameEvents.RaiseOnSit();
-
-        yield return StartCoroutine(ScreenFader.Instance.FadeOut());
-
+        yield return ScreenFader.Instance.FadeOut();
     }
 
-
-    private void UnSit()
-    {
-        playerController.enabled = false;
-
-        playerController.height = playerHeight;
-        playerController.center = Vector3.up * (playerController.height / 2f);
-
-        transform.position = lastPosition;
-        transform.rotation = Quaternion.identity;
-
-        playerController.enabled = true;
-        EnableMovement();
-    }
     private void UnSitWithFade()
     {
         StartCoroutine(UnSitRoutine());
@@ -177,19 +173,17 @@ public class Player : MonoBehaviour
 
     private IEnumerator UnSitRoutine()
     {
-        yield return StartCoroutine(ScreenFader.Instance.FadeIn());
+        yield return ScreenFader.Instance.FadeIn();
 
-        UnSit();
+        controller.enabled = false;
+        controller.height = originalHeight;
+        transform.position = lastPosition;
+        controller.enabled = true;
+
+        EnableMovement();
         GameEvents.RaiseOnUnSit();
 
-        yield return StartCoroutine(ScreenFader.Instance.FadeOut());
-
-    }
-
-    private void _OnTalk(DialogueNode _)
-    {
-        DisableMovement();
-        DisableLook();
+        yield return ScreenFader.Instance.FadeOut();
     }
 
     private void Pee()
@@ -200,33 +194,22 @@ public class Player : MonoBehaviour
     private IEnumerator PeeRoutine()
     {
         DisableMovement();
-        yield return StartCoroutine(ScreenFader.Instance.FadeIn());
 
+        yield return ScreenFader.Instance.FadeIn();
         GameEvents.RaisePeeStart();
         GameEvents.OnRequestProgressBar?.Invoke(peeDuration, "Peeing");
 
-        yield return StartCoroutine(ScreenFader.Instance.FadeRemain(peeDuration));
+        yield return new WaitForSeconds(peeDuration);
 
-        yield return StartCoroutine(ScreenFader.Instance.FadeOut());
-
+        yield return ScreenFader.Instance.FadeOut();
         GameEvents.RaisePeeEnd();
+
         EnableMovement();
     }
 
-    private void DisableMovement()
-    {
-        canMove = false;
-    }
-    private void EnableMovement()
-    {
-        canMove = true;
-    }
-    private void DisableLook()
-    {
-        canLook = false;
-    }
-    private void EnableLook()
-    {
-        canLook = true;
-    }
+    private void EnableMovement() => canMove = true;
+    private void DisableMovement() => canMove = false;
+
+    private void EnableBodyLook() => canBodyLook = true;
+    private void DisableBodyLook() => canBodyLook = false;
 }

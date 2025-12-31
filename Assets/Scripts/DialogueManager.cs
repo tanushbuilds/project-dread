@@ -110,6 +110,14 @@ public class DialogueManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        GameEvents.OnEndDialogue?.Invoke();
+        GameEvents.RaiseOnEndDialogue();
+
+        GameEvents.OnRequestStopCameraLookAt?.Invoke();
+        GameEvents.OnRequestStopBodyLookAt?.Invoke();
+        GameEvents.OnRequestEnableBodyLook?.Invoke();
+        GameEvents.OnRequestEnableHeadBob?.Invoke();
+        GameEvents.OnRequestEnableMovement?.Invoke();
+        GameEvents.OnRequestEnableLook?.Invoke();
+
     }
 }

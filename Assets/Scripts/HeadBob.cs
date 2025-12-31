@@ -21,24 +21,14 @@ public class Headbob : MonoBehaviour
 
     private void OnEnable()
     {
-        GameEvents.OnRequestPee += DisableHeadBob;
-        GameEvents.OnPeeEnd += EnableHeadBob;
-        GameEvents.OnSit += DisableHeadBob;
-        GameEvents.OnUnSit += EnableHeadBob;
-        GameEvents.OnTalk += _OnTalk;
-        GameEvents.OnEndDialogue += EnableHeadBob;
-        GameEvents.OnSleep += DisableHeadBob;
+        GameEvents.OnRequestDisableHeadBob += DisableHeadBob;
+        GameEvents.OnRequestStopCameraLookAt += EnableHeadBob;
     }
 
     private void OnDisable()
     {
-        GameEvents.OnRequestPee -= DisableHeadBob;
-        GameEvents.OnPeeEnd -= EnableHeadBob;
-        GameEvents.OnSit -= DisableHeadBob;
-        GameEvents.OnUnSit -= EnableHeadBob;
-        GameEvents.OnTalk -= _OnTalk;
-        GameEvents.OnEndDialogue -= EnableHeadBob;
-        GameEvents.OnSleep -= DisableHeadBob;
+        GameEvents.OnRequestDisableHeadBob += DisableHeadBob;
+        GameEvents.OnRequestStopCameraLookAt -= EnableHeadBob;
     }
 
 
@@ -101,7 +91,7 @@ public class Headbob : MonoBehaviour
         return motion;
     }
 
-    private void _OnTalk(DialogueNode _)
+    private void OnRequestLookAt(Transform _, Transform __)
     {
         DisableHeadBob();
     }

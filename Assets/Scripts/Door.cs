@@ -41,6 +41,10 @@ public class Door : MonoBehaviour, IInteractable
     {
         return anim.GetBool("IsDoorOpen");
     }
+    public void Enable()
+    {
+        _enabled = true;
+    }
     public void Disable()
     {
         _enabled = false;

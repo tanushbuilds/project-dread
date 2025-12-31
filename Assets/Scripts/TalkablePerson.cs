@@ -38,8 +38,14 @@ public class TalkablePerson : MonoBehaviour, ITalkable
         {
             hasTalked = true;
 
-            GameEvents.OnRequestLookAt?.Invoke(transform, head);
-            GameEvents.OnTalk?.Invoke(startNode);
+            GameEvents.OnRequestCameraLookAt?.Invoke(head);
+            GameEvents.OnRequestBodyLookAt?.Invoke(transform);
+            GameEvents.OnRequestDisableMovement?.Invoke();
+            GameEvents.OnRequestDisableHeadBob?.Invoke();
+
+
+
+            GameEvents.RaiseOnTalk(startNode);
         }
     }
     private void RotateTowardsXTarget(Transform targetToLookAtX)

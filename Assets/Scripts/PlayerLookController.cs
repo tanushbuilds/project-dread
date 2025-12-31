@@ -1,89 +1,91 @@
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 public class PlayerLookController : MonoBehaviour
 {
+    public static PlayerLookController Instance;
+
     [SerializeField] private float mouseSensitivity;
     [SerializeField] private Transform playerCamera;
     [SerializeField] private CharacterController playerController;
-    [SerializeField] private float rotateSmoothSpeed;
+    [SerializeField] private RotationSettings rotationSettings;
 
-    public static PlayerLookController Instance;
-    
     private float xRotation;
     private bool canLook = true;
-    private Transform targetToLookAtX;
-    private Transform targetToLookAtY;
-    private float CAMERA_OFFSET = 0.2f;
 
-
-    private void OnEnable()
-    {
-        GameEvents.OnSit += AlignCameraOnSit;
-        GameEvents.OnUnSit += ResetCameraOnUnSit;
-        GameEvents.OnRequestPee += DisableLook;
-        GameEvents.OnPeeEnd += EnableLook;
-        GameEvents.OnRequestLookAt += SetLookTargets;
-        GameEvents.OnTalk += _OnTalk;
-        GameEvents.OnEndDialogue += EnableLook;
-        GameEvents.OnEndDialogue += SetLookTargetsNull;
-        GameEvents.OnSleep += DisableLook;
-
-    }
-    private void OnDisable()
-    {
-        GameEvents.OnSit -= AlignCameraOnSit;
-        GameEvents.OnUnSit -= ResetCameraOnUnSit;
-        GameEvents.OnRequestPee -= DisableLook;
-        GameEvents.OnPeeEnd -= EnableLook;
-        GameEvents.OnRequestLookAt -= SetLookTargets;
-        GameEvents.OnTalk -= _OnTalk;
-        GameEvents.OnEndDialogue -= EnableLook;
-        GameEvents.OnEndDialogue -= SetLookTargetsNull;
-        GameEvents.OnSleep -= DisableLook;
-    }
+    private Transform lookTarget;
+    private const float CAMERA_OFFSET = 0.2f;
 
     private void Awake()
     {
         if (Instance == null)
-        {
             Instance = this;
-        }
     }
 
+    private void OnEnable()
+    {
+        GameEvents.OnRequestDisableLook += DisableLook;
+        GameEvents.OnRequestEnableLook += EnableLook;
+
+        GameEvents.OnRequestCameraLookAt += SetLookTarget;
+        GameEvents.OnRequestStopCameraLookAt += ClearLookTarget;
+
+        GameEvents.OnSit += AlignCameraOnSit;
+        GameEvents.OnUnSit += ResetCameraOnUnSit;
+    }
+
+    private void OnDisable()
+    {
+        GameEvents.OnRequestDisableLook -= DisableLook;
+        GameEvents.OnRequestEnableLook -= EnableLook;
+
+        GameEvents.OnRequestCameraLookAt -= SetLookTarget;
+        GameEvents.OnRequestStopCameraLookAt -= ClearLookTarget;
+
+        GameEvents.OnSit -= AlignCameraOnSit;
+        GameEvents.OnUnSit -= ResetCameraOnUnSit;
+    }
 
     private void Update()
     {
-        if (targetToLookAtX != null)
-        {
-            RotateTowardsXTarget();
-        }
-        if (targetToLookAtY != null)
-        {
-            RotateTowardsYTarget();
-        }
+        if (lookTarget != null)
+            RotateTowardsTarget();
     }
 
-    public void HandleLook(Vector2 lookDir)
+    public void HandleLook(Vector2 lookInput)
     {
-        if (!canLook) return;
-        xRotation -= lookDir.y * mouseSensitivity * Time.deltaTime;
+        if (!canLook || lookTarget != null) return;
+
+        xRotation -= lookInput.y * mouseSensitivity * Time.deltaTime;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
         playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
-    private void SetLookTargets(Transform targetX, Transform targetY)
-    {
-        DisableLook();
 
-        targetToLookAtX = targetX;
-        targetToLookAtY = targetY;
-    }
-    private void SetLookTargetsNull()
+    private void SetLookTarget(Transform target)
     {
-        targetToLookAtX = null;
-        targetToLookAtY = null;
+        lookTarget = target;
     }
+
+    private void ClearLookTarget()
+    {
+        lookTarget = null;
+    }
+
+    private void RotateTowardsTarget()
+    {
+        Vector3 direction = lookTarget.position - playerCamera.position;
+        if (direction.sqrMagnitude < 0.001f) return;
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        playerCamera.rotation = Quaternion.Slerp(
+            playerCamera.rotation,
+            targetRotation,
+            rotationSettings.rotateSmoothSpeed * Time.deltaTime
+        );
+    }
+
+    private void EnableLook() => canLook = true;
+    private void DisableLook() => canLook = false;
 
     private void AlignCameraOnSit()
     {
@@ -93,42 +95,9 @@ public class PlayerLookController : MonoBehaviour
             transform.localPosition.z
         );
     }
+
     private void ResetCameraOnUnSit()
     {
-        transform.localPosition = Vector2.up * (playerController.height - CAMERA_OFFSET);
-    }
-
-    private void RotateTowardsXTarget()
-    {
-        Vector3 direction = targetToLookAtX.position - transform.position;
-        direction.y = 0;
-        if (direction.sqrMagnitude < 0.001f) return;
-
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotateSmoothSpeed * Time.deltaTime);
-    }
-
-    private void RotateTowardsYTarget()
-    {
-        Vector3 direction = targetToLookAtY.position - playerCamera.position;
-        if (direction.sqrMagnitude < 0.001f) return;
-
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
-
-        playerCamera.rotation = Quaternion.Slerp(playerCamera.rotation, targetRotation, rotateSmoothSpeed * Time.deltaTime);
-    }
-
-    private void _OnTalk(DialogueNode _)
-    {
-        DisableLook();
-    }
-
-    private void EnableLook()
-    {
-        canLook = true;
-    }
-    private void DisableLook()
-    {
-        canLook = false;
+        transform.localPosition = Vector3.up * (playerController.height - CAMERA_OFFSET);
     }
 }
