@@ -36,8 +36,8 @@ public class DoorStoryTrigger : MonoBehaviour
         mainDoor.OnDoorOpen -= OnDoorOpened;
         mainDoorLock.OnDoorLock -= OnLock;
 
-        GameEvents.OnFoodEaten += OnFoodEaten;
-        GameEvents.OnPeeEnd += OnPeeEnd;
+        GameEvents.OnFoodEaten -= OnFoodEaten;
+        GameEvents.OnPeeEnd -= OnPeeEnd;
     }
 
     private void OnFoodEaten()

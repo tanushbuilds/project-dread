@@ -93,11 +93,6 @@ public class Headbob : MonoBehaviour
         return motion;
     }
 
-    private void OnRequestLookAt(Transform _, Transform __)
-    {
-        DisableHeadBob();
-    }
-
     private void DisableHeadBob()
     {
         _enabled = false;

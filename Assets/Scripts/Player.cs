@@ -50,7 +50,7 @@ public class Player : MonoBehaviour
         GameEvents.OnRequestStopBodyLookAt += ClearLookTarget;
 
         GameEvents.OnRequestSit += SitWithFade;
-        GameEvents.OnRequestStandUp += UnSitWithFade;
+        GameEvents.OnRequestStandUp += StandUpWithFade;
         GameEvents.OnRequestPee += Pee;
     }
 
@@ -66,7 +66,7 @@ public class Player : MonoBehaviour
         GameEvents.OnRequestStopBodyLookAt -= ClearLookTarget;
 
         GameEvents.OnRequestSit -= SitWithFade;
-        GameEvents.OnRequestStandUp -= UnSitWithFade;
+        GameEvents.OnRequestStandUp -= StandUpWithFade;
         GameEvents.OnRequestPee -= Pee;
     }
 
@@ -183,38 +183,36 @@ public class Player : MonoBehaviour
     private IEnumerator SitRoutine()
     {
         DisableMovement();
+        GameEvents.OnRequestDisableHeadBob();
 
         yield return ScreenFader.Instance.FadeIn();
 
         playerHeight = playerController.height;
         lastPosition = transform.position;
 
-        playerController.enabled = false;
         transform.position = currentSitPosition.position;
         playerController.height = playerHeightWhileSitting;
-        playerController.enabled = true;
 
         GameEvents.RaiseOnSit();
 
         yield return ScreenFader.Instance.FadeOut();
     }
 
-    private void UnSitWithFade()
+    private void StandUpWithFade()
     {
-        StartCoroutine(UnSitRoutine());
+        StartCoroutine(StandUpRoutine());
     }
 
-    private IEnumerator UnSitRoutine()
+    private IEnumerator StandUpRoutine()
     {
         yield return ScreenFader.Instance.FadeIn();
 
-        playerController.enabled = false;
         playerController.height = playerHeight;
         transform.position = lastPosition;
-        playerController.enabled = true;
 
         EnableMovement();
-        GameEvents.RaiseOnUnSit();
+        GameEvents.RaiseStandUp();
+        GameEvents.OnRequestEnableHeadBob();
 
         yield return ScreenFader.Instance.FadeOut();
     }

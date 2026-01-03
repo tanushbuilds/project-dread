@@ -110,7 +110,7 @@ public class GameEvents : MonoBehaviour
         OnSit?.Invoke();
     }
 
-    public static void RaiseOnUnSit()
+    public static void RaiseStandUp()
     {
         OnStandUp?.Invoke();
     }

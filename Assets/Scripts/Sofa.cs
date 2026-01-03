@@ -11,17 +11,12 @@ public class Sofa : MonoBehaviour, IInteractable
         if (hasSat && canStandUp)
         {
             GameEvents.OnRequestStandUp?.Invoke();
-            GameEvents.OnRequestEnableHeadBob?.Invoke();
-
             hasSat = false;
             return;
         }
         else if(!hasSat)
         {
             GameEvents.OnRequestSit?.Invoke(sitPosition);
-            GameEvents.OnRequestDisableHeadBob?.Invoke();
-            GameEvents.OnRequestDisableMovement?.Invoke();
-
             hasSat = true;
         }
     }
