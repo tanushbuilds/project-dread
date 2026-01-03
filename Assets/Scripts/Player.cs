@@ -5,44 +5,38 @@ public class Player : MonoBehaviour
 {
     public static Player Instance;
 
-    [Header("Movement")]
+    private CharacterController playerController;
+    private Vector3 velocity;
+
+    private bool canLook = true;
+    private bool canBodyLook = true;
+    private bool canMove = true;
+
+    private float playerHeight;
+    private Vector3 lastPosition;
+
+    private Transform lookTarget;
+    private Transform currentSitPosition;
+
+    [SerializeField] private float peeDuration;
     [SerializeField] private float walkSpeed;
     [SerializeField] private float fastWalkSpeed;
     [SerializeField] private float gravity;
-
-    [Header("Ground Check")]
-    [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckDistance;
     [SerializeField] private LayerMask groundMask;
-
-    [Header("Look")]
+    [SerializeField] private Transform groundCheck;
     [SerializeField] private float mouseSensitivity;
+
+    [SerializeField] private AudioSource footstep;
+    [SerializeField] private float stepInterval;
+    [SerializeField] private Vector2 footstepSoundPitchRange;
+
+    [SerializeField] private float playerHeightWhileSitting;
     [SerializeField] private RotationSettings rotationSettings;
 
-    [Header("Sit / Pee")]
-    [SerializeField] private float peeDuration;
-    [SerializeField] private float playerHeightWhileSitting;
+    private float stepTimer;
+    private bool isGrounded;
 
-    private CharacterController controller;
-    private Vector3 velocity;
-
-    private bool canMove = true;
-    private bool canBodyLook = true;
-
-    private Transform lookTarget;
-    private float originalHeight;
-    private Vector3 lastPosition;
-    private Transform currentSitPosition;
-
-    private void Awake()
-    {
-        if (Instance == null)
-            Instance = this;
-
-        controller = GetComponent<CharacterController>();
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
 
     private void OnEnable()
     {
@@ -56,7 +50,7 @@ public class Player : MonoBehaviour
         GameEvents.OnRequestStopBodyLookAt += ClearLookTarget;
 
         GameEvents.OnRequestSit += SitWithFade;
-        GameEvents.OnRequestUnSit += UnSitWithFade;
+        GameEvents.OnRequestStandUp += UnSitWithFade;
         GameEvents.OnRequestPee += Pee;
     }
 
@@ -72,8 +66,20 @@ public class Player : MonoBehaviour
         GameEvents.OnRequestStopBodyLookAt -= ClearLookTarget;
 
         GameEvents.OnRequestSit -= SitWithFade;
-        GameEvents.OnRequestUnSit -= UnSitWithFade;
+        GameEvents.OnRequestStandUp -= UnSitWithFade;
         GameEvents.OnRequestPee -= Pee;
+    }
+
+
+    private void Awake()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        if (Instance == null)
+            Instance = this;
+
+        playerController = GetComponent<CharacterController>();
     }
 
     private void Update()
@@ -84,25 +90,47 @@ public class Player : MonoBehaviour
             RotateTowardsTarget();
     }
 
-    public void HandleMovement(Vector3 input, bool fastWalk)
+
+    public void HandleMovement(Vector3 moveDir, bool isFastWalk)
     {
         if (!canMove) return;
 
-        float speed = fastWalk ? fastWalkSpeed : walkSpeed;
-        Vector3 move = transform.forward * input.z + transform.right * input.x;
+        float speed = isFastWalk ? fastWalkSpeed : walkSpeed;
 
+        Vector3 move = transform.forward * moveDir.z + transform.right * moveDir.x;
         move *= speed;
         move.y = velocity.y;
 
-        controller.Move(move * Time.deltaTime);
+        playerController.Move(move * Time.deltaTime);
+
+        if (moveDir.magnitude > 0.1f)
+        {
+            stepTimer -= Time.deltaTime;
+            if (stepTimer <= 0f)
+            {
+                footstep.pitch = Random.Range(
+                    footstepSoundPitchRange.x,
+                    footstepSoundPitchRange.y
+                );
+                footstep.Play();
+                stepTimer = stepInterval;
+            }
+        }
+        else
+        {
+            stepTimer = 0f;
+        }
     }
 
-    public void HandleLook(Vector2 lookInput)
+    public void HandleLook(Vector2 lookDir)
     {
-        if (!canBodyLook || lookTarget != null) return;
+        if (!canLook || !canBodyLook || lookTarget != null) return;
 
-        transform.Rotate(Vector3.up * lookInput.x * mouseSensitivity * Time.deltaTime);
+        transform.Rotate(
+            Vector3.up * lookDir.x * mouseSensitivity * Time.deltaTime
+        );
     }
+
 
     private void SetLookTarget(Transform target)
     {
@@ -117,11 +145,9 @@ public class Player : MonoBehaviour
     private void RotateTowardsTarget()
     {
         Vector3 direction = lookTarget.position - transform.position;
-
         direction.y = 0f;
 
-        if (direction.sqrMagnitude < 0.001f)
-            return;
+        if (direction.sqrMagnitude < 0.001f) return;
 
         Quaternion targetRotation = Quaternion.LookRotation(direction);
 
@@ -135,34 +161,41 @@ public class Player : MonoBehaviour
 
     private void ApplyGravity()
     {
-        bool grounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask);
+        isGrounded = Physics.CheckSphere(
+            groundCheck.position,
+            groundCheckDistance,
+            groundMask
+        );
 
-        if (grounded && velocity.y < 0)
+        if (isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
         velocity.y += gravity * Time.deltaTime;
     }
 
-    private void SitWithFade(Transform sitPoint)
+
+    private void SitWithFade(Transform sitPosition)
     {
-        currentSitPosition = sitPoint;
+        currentSitPosition = sitPosition;
         StartCoroutine(SitRoutine());
     }
 
     private IEnumerator SitRoutine()
     {
         DisableMovement();
+
         yield return ScreenFader.Instance.FadeIn();
 
-        originalHeight = controller.height;
+        playerHeight = playerController.height;
         lastPosition = transform.position;
 
-        controller.enabled = false;
+        playerController.enabled = false;
         transform.position = currentSitPosition.position;
-        controller.height = playerHeightWhileSitting;
-        controller.enabled = true;
+        playerController.height = playerHeightWhileSitting;
+        playerController.enabled = true;
 
         GameEvents.RaiseOnSit();
+
         yield return ScreenFader.Instance.FadeOut();
     }
 
@@ -175,16 +208,17 @@ public class Player : MonoBehaviour
     {
         yield return ScreenFader.Instance.FadeIn();
 
-        controller.enabled = false;
-        controller.height = originalHeight;
+        playerController.enabled = false;
+        playerController.height = playerHeight;
         transform.position = lastPosition;
-        controller.enabled = true;
+        playerController.enabled = true;
 
         EnableMovement();
         GameEvents.RaiseOnUnSit();
 
         yield return ScreenFader.Instance.FadeOut();
     }
+
 
     private void Pee()
     {
@@ -196,16 +230,18 @@ public class Player : MonoBehaviour
         DisableMovement();
 
         yield return ScreenFader.Instance.FadeIn();
+
         GameEvents.RaisePeeStart();
         GameEvents.OnRequestProgressBar?.Invoke(peeDuration, "Peeing");
 
         yield return new WaitForSeconds(peeDuration);
 
         yield return ScreenFader.Instance.FadeOut();
-        GameEvents.RaisePeeEnd();
 
+        GameEvents.RaisePeeEnd();
         EnableMovement();
     }
+
 
     private void EnableMovement() => canMove = true;
     private void DisableMovement() => canMove = false;

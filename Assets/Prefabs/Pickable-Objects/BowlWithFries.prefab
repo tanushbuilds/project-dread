@@ -313,6 +313,7 @@ GameObject:
   - component: {fileID: 7883296689659908786}
   - component: {fileID: 1232445112221194419}
   - component: {fileID: 7704080382577631015}
+  - component: {fileID: 333181577228869153}
   - component: {fileID: 8752066509224906819}
   m_Layer: 0
   m_Name: BowlWithFries
@@ -402,7 +403,19 @@ MonoBehaviour:
   eatDuration: 7
   actionName: Consuming
   eatSound: {fileID: 8752066509224906819}
-  fries: {fileID: 0}
+  friesSets: []
+--- !u!114 &333181577228869153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2324840393571347592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f97da7e32515c77419d71144600b6dd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Microwaveable
 --- !u!82 &8752066509224906819
 AudioSource:
   m_ObjectHideFlags: 0

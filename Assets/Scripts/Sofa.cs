@@ -4,13 +4,13 @@ public class Sofa : MonoBehaviour, IInteractable
 {
     [SerializeField] private Transform sitPosition;
     private bool hasSat;
-    private bool canUnsit = true;
+    private bool canStandUp = true;
 
     public void Interact()
     {
-        if (hasSat && canUnsit)
+        if (hasSat && canStandUp)
         {
-            GameEvents.OnRequestUnSit?.Invoke();
+            GameEvents.OnRequestStandUp?.Invoke();
             GameEvents.OnRequestEnableHeadBob?.Invoke();
 
             hasSat = false;
@@ -25,8 +25,8 @@ public class Sofa : MonoBehaviour, IInteractable
             hasSat = true;
         }
     }
-    public void SetCanUnsit(bool canUnsit)
+    public void SetCanStandUp(bool canStandUp)
     {
-        this.canUnsit = canUnsit;
+        this.canStandUp = canStandUp;
     }
 }

@@ -13,7 +13,7 @@ public class Grabbable : MonoBehaviour
     public Vector3 CameraOffset => cameraOffset;
 
     public event Action OnGrab;
-    public event Action OnThrow;
+    public event Action OnDrop;
 
     public void OnGrabbed()
     {
@@ -21,9 +21,9 @@ public class Grabbable : MonoBehaviour
         RemoveRigidbody();
     }
 
-    public void OnThrown()
+    public void OnDropped()
     {
-        OnThrow?.Invoke();
+        OnDrop?.Invoke();
     }
     public Rigidbody GetOrAddRigidbody()
     {

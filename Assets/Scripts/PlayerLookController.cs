@@ -30,7 +30,7 @@ public class PlayerLookController : MonoBehaviour
         GameEvents.OnRequestStopCameraLookAt += ClearLookTarget;
 
         GameEvents.OnSit += AlignCameraOnSit;
-        GameEvents.OnUnSit += ResetCameraOnUnSit;
+        GameEvents.OnStandUp += ResetCameraOnStandUp;
     }
 
     private void OnDisable()
@@ -42,7 +42,7 @@ public class PlayerLookController : MonoBehaviour
         GameEvents.OnRequestStopCameraLookAt -= ClearLookTarget;
 
         GameEvents.OnSit -= AlignCameraOnSit;
-        GameEvents.OnUnSit -= ResetCameraOnUnSit;
+        GameEvents.OnStandUp -= ResetCameraOnStandUp;
     }
 
     private void Update()
@@ -96,7 +96,7 @@ public class PlayerLookController : MonoBehaviour
         );
     }
 
-    private void ResetCameraOnUnSit()
+    private void ResetCameraOnStandUp()
     {
         transform.localPosition = Vector3.up * (playerController.height - CAMERA_OFFSET);
     }

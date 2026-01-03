@@ -21,13 +21,15 @@ public class Headbob : MonoBehaviour
 
     private void OnEnable()
     {
+        GameEvents.OnRequestEnableHeadBob += EnableHeadBob;
         GameEvents.OnRequestDisableHeadBob += DisableHeadBob;
         GameEvents.OnRequestStopCameraLookAt += EnableHeadBob;
     }
 
     private void OnDisable()
     {
-        GameEvents.OnRequestDisableHeadBob += DisableHeadBob;
+        GameEvents.OnRequestEnableHeadBob -= EnableHeadBob;
+        GameEvents.OnRequestDisableHeadBob -= DisableHeadBob;
         GameEvents.OnRequestStopCameraLookAt -= EnableHeadBob;
     }
 

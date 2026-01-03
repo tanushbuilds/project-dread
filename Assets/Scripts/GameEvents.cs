@@ -22,12 +22,12 @@ public class GameEvents : MonoBehaviour
     public static event Action OnEndDialogue;
 
     public static event Action OnSit;
-    public static event Action OnUnSit;
+    public static event Action OnStandUp;
 
     /* =========================
      * REQUESTS / COMMANDS
      * ========================= */
-
+    public static Action OnPlace;
     // Look control
     public static Action<Transform> OnRequestCameraLookAt;
     public static Action<Transform> OnRequestBodyLookAt;
@@ -47,7 +47,7 @@ public class GameEvents : MonoBehaviour
 
     // Interaction requests
     public static Action<Transform> OnRequestSit;
-    public static Action OnRequestUnSit;
+    public static Action OnRequestStandUp;
     public static Action OnRequestPee;
 
     // UI
@@ -56,6 +56,7 @@ public class GameEvents : MonoBehaviour
     /* =========================
      * RAISE / REQUEST METHODS
      * ========================= */
+
 
     // Dialogue
     public static void RaiseOnTalk(DialogueNode node)
@@ -111,7 +112,7 @@ public class GameEvents : MonoBehaviour
 
     public static void RaiseOnUnSit()
     {
-        OnUnSit?.Invoke();
+        OnStandUp?.Invoke();
     }
 
     /* =========================

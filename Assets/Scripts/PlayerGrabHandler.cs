@@ -5,9 +5,12 @@ public class PlayerGrabHandler : MonoBehaviour
     [Header("Slots")]
     [SerializeField] private Transform grabSlot;
     [SerializeField] private Transform interactableGrabSlot;
+
     public static PlayerGrabHandler Instance;
+
     private Vector3 grabSlotLastPosition;
     private Vector3 interactableGrabSlotLastPosition;
+
     private CharacterController playerController;
     private float playerHeight;
 
@@ -17,29 +20,36 @@ public class PlayerGrabHandler : MonoBehaviour
     [SerializeField] private float interactableGrabSlotSitHeightMultiplier = 0.25f;
 
     private Grabbable currentGrabbable;
-    
+
     private bool isHolding;
     public bool IsHolding => isHolding;
 
+    private void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+
+        playerController = GetComponent<CharacterController>();
+        playerHeight = playerController.height;
+    }
 
     private void OnEnable()
     {
         GameEvents.OnSit += OnSit;
-        GameEvents.OnUnSit += ReevaluateVectorsOnUnSit;
+        GameEvents.OnStandUp += OnStandUp;
+        GameEvents.OnPlace += Drop;
     }
 
     private void OnDisable()
     {
         GameEvents.OnSit -= OnSit;
-        GameEvents.OnUnSit -= ReevaluateVectorsOnUnSit;
+        GameEvents.OnStandUp -= OnStandUp;
+        GameEvents.OnPlace -= Drop;
     }
 
-    private void Awake()
-    {
-        Instance = this;
-        playerController = GetComponent<CharacterController>();
-        playerHeight = playerController.height;
-    }
+    // =========================
+    // GRAB LOGIC
+    // =========================
 
     public void TryGrab(Grabbable grabbable)
     {
@@ -50,22 +60,9 @@ public class PlayerGrabHandler : MonoBehaviour
         isHolding = true;
 
         AttachToSlot(grabSlot, grabbable.CameraOffset);
-        SetLayerRecursively(currentGrabbable.gameObject, LayerMask.NameToLayer("Grabbed"));
+        SetLayerRecursively(grabbable.gameObject, LayerMask.NameToLayer("Grabbed"));
 
-        currentGrabbable.OnGrabbed();
-    }
-
-    public void Throw()
-    {
-        if (!isHolding || !currentGrabbable.CanBeThrown)
-            return;
-
-        currentGrabbable.OnThrown();
-
-        Rigidbody rb = currentGrabbable.GetOrAddRigidbody();
-        rb.AddForce(transform.forward * throwForce, ForceMode.Impulse);
-
-        Drop();
+        grabbable.OnGrabbed();
     }
 
     public void Drop()
@@ -73,9 +70,27 @@ public class PlayerGrabHandler : MonoBehaviour
         if (!isHolding)
             return;
 
+        currentGrabbable.OnDropped();
         Detach();
         ClearState();
+
     }
+
+    public void Throw()
+    {
+        if (!isHolding || !currentGrabbable.CanBeThrown)
+            return;
+
+
+        Rigidbody rb = currentGrabbable.GetOrAddRigidbody();
+        rb.AddForce(transform.forward * throwForce, ForceMode.Impulse);
+
+        Drop();
+    }
+
+    // =========================
+    // SLOT ATTACHMENT
+    // =========================
 
     private void AttachToSlot(Transform slot, Vector3 offset)
     {
@@ -86,12 +101,13 @@ public class PlayerGrabHandler : MonoBehaviour
 
     public void AttachToInteractableSlot()
     {
+        if (!isHolding) return;
         AttachToSlot(interactableGrabSlot, currentGrabbable.CameraOffset);
     }
+
     public void AttachToDefaultSlot()
     {
         if (!isHolding) return;
-
         AttachToSlot(grabSlot, currentGrabbable.CameraOffset);
     }
 
@@ -107,46 +123,49 @@ public class PlayerGrabHandler : MonoBehaviour
         isHolding = false;
     }
 
-    private void SetLayerRecursively(GameObject obj, int layer)
-    {
-        obj.layer = layer;
-        foreach (Transform child in obj.transform)
-            SetLayerRecursively(child.gameObject, layer);
-    }
+    // =========================
+    // SITTING ADJUSTMENTS
+    // =========================
 
     private void OnSit()
     {
-        ReevaluateVectorsOnSit(playerHeight);
-    }
-
-    private void ReevaluateVectorsOnSit(float playerHeight)
-    {
-
         grabSlotLastPosition = grabSlot.localPosition;
         interactableGrabSlotLastPosition = interactableGrabSlot.localPosition;
 
-        float grabSlotYOffset =
-    playerHeight * grabSlotSitHeightMultiplier;
-
-        float interactableSlotYOffset =
-            playerHeight * interactableGrabSlotSitHeightMultiplier;
-
         grabSlot.localPosition = new Vector3(
             grabSlot.localPosition.x,
-            grabSlotYOffset,
+            playerHeight * grabSlotSitHeightMultiplier,
             grabSlot.localPosition.z
         );
 
         interactableGrabSlot.localPosition = new Vector3(
             interactableGrabSlot.localPosition.x,
-            interactableSlotYOffset,
+            playerHeight * interactableGrabSlotSitHeightMultiplier,
             interactableGrabSlot.localPosition.z
         );
     }
-    private void ReevaluateVectorsOnUnSit()
-    {
 
+    private void OnStandUp()
+    {
         grabSlot.localPosition = grabSlotLastPosition;
         interactableGrabSlot.localPosition = interactableGrabSlotLastPosition;
+    }
+
+    // =========================
+    // UTILITIES
+    // =========================
+
+    private void SetLayerRecursively(GameObject obj, int layer)
+    {
+        obj.layer = layer;
+        foreach (Transform child in obj.transform)
+        {
+            SetLayerRecursively(child.gameObject, layer);
+        }
+    }
+
+    public Grabbable GetCurrentGrabbable()
+    {
+        return currentGrabbable;
     }
 }

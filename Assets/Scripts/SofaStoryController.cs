@@ -18,16 +18,16 @@ public class SofaStoryController : MonoBehaviour
 
     private void OnFoodEatStart()
     {
-        SetCanUnsit(false);
+        SetCanStandUp(false);
     }
 
     private void OnFoodEaten()
     {
-        SetCanUnsit(true);
+        SetCanStandUp(true);
     }
 
-    private void SetCanUnsit(bool canUnSit)
+    private void SetCanStandUp(bool canStandUp)
     {
-        sofa.SetCanUnsit(canUnSit);
+        sofa.SetCanStandUp(canStandUp);
     }
 }

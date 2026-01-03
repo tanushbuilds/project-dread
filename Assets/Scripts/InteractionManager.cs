@@ -6,9 +6,6 @@ public class InteractionManager : MonoBehaviour
     [SerializeField] private PlayerGrabHandler grabHandler;
     [SerializeField] private Transform playerCamera;
 
-    private Grabbable heldObject;
-
-
     private void OnEnable()
     {
         InputHandler.OnInteractKeyPressed += HandleInteract;
