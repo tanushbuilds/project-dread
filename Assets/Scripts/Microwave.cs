@@ -17,12 +17,14 @@ public class Microwave : MonoBehaviour, IInteractable, IItemReceiver
 
     public void Interact()
     {
-        if (!microwaveDoor.IsOpen() && currentItem != null)
+        bool itemCanBeHeated = microwaveDoor != null && currentItem != null && !microwaveDoor.IsOpen() ;
+
+        if (itemCanBeHeated)
         {
             microwaveDoor.Disable();
             HeatItem();
         }
-        else if (microwaveDoor.IsOpen())
+        else if (microwaveDoor != null && microwaveDoor.IsOpen())
         {
             if (!grabHandler.IsHolding) return;
 

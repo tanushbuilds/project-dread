@@ -27,9 +27,6 @@ public class Toilet : MonoBehaviour, IInteractable
     {
         if (hasPeed) return;
 
-        GameEvents.OnRequestDisableHeadBob?.Invoke();
-        GameEvents.OnRequestDisableLook?.Invoke();
-
         GameEvents.OnRequestPee?.Invoke();
         
         hasPeed = true;

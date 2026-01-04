@@ -28,7 +28,10 @@ public class Player : MonoBehaviour
     [SerializeField] private float mouseSensitivity;
 
     [SerializeField] private AudioSource footstep;
-    [SerializeField] private float stepInterval;
+    private float stepInterval;
+    [SerializeField] private float walkStepInterval;
+    [SerializeField] private float fastWalkStepInterval;
+
     [SerializeField] private Vector2 footstepSoundPitchRange;
 
     [SerializeField] private float playerHeightWhileSitting;
@@ -113,7 +116,7 @@ public class Player : MonoBehaviour
                     footstepSoundPitchRange.y
                 );
                 footstep.Play();
-                stepTimer = stepInterval;
+                stepTimer = isFastWalk ? fastWalkStepInterval : walkStepInterval;
             }
         }
         else
@@ -226,6 +229,9 @@ public class Player : MonoBehaviour
     private IEnumerator PeeRoutine()
     {
         DisableMovement();
+        
+        GameEvents.OnRequestDisableHeadBob?.Invoke();
+        GameEvents.OnRequestDisableLook?.Invoke();
 
         yield return ScreenFader.Instance.FadeIn();
 
@@ -236,8 +242,13 @@ public class Player : MonoBehaviour
 
         yield return ScreenFader.Instance.FadeOut();
 
-        GameEvents.RaisePeeEnd();
         EnableMovement();
+        
+        GameEvents.RaisePeeEnd();
+
+        GameEvents.OnRequestEnableHeadBob();
+        GameEvents.OnRequestEnableLook();
+
     }
 
 
