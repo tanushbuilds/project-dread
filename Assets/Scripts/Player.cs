@@ -196,6 +196,7 @@ public class Player : MonoBehaviour
         transform.position = currentSitPosition.position;
         playerController.height = playerHeightWhileSitting;
 
+        transform.rotation = Quaternion.identity;
         GameEvents.RaiseOnSit();
 
         yield return ScreenFader.Instance.FadeOut();

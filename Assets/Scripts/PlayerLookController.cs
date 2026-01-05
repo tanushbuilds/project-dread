@@ -89,6 +89,8 @@ public class PlayerLookController : MonoBehaviour
 
     private void AlignCameraOnSit()
     {
+        xRotation = 0f;
+
         transform.localPosition = new Vector3(
             transform.localPosition.x,
             playerController.height - CAMERA_OFFSET,
